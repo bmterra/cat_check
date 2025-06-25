@@ -25,6 +25,11 @@ module "uploads_bucket" {
   ]
 }
 
+resource "aws_s3_bucket_notification" "uploads_bucket_notification" {
+  bucket      = module.uploads_bucket.s3_bucket_id
+  eventbridge = true
+}
+
 ########################################
 # DynamoDB table for cat check status
 ########################################
@@ -127,7 +132,7 @@ resource "aws_iam_role_policy_attachment" "cat_status_policy_attach" {
 resource "aws_lambda_function" "s3_upload" {
   function_name = "s3_upload_${random_pet.suffix.id}"
   filename      = "${path.module}/../../../lambdas/s3_upload.zip"
-  handler       = "s3_upload.lambda_handler"
+  handler       = "handler.lambda_handler"
   runtime       = "python3.11"
   role          = aws_iam_role.s3_upload_role.arn
   timeout       = 10
@@ -144,7 +149,7 @@ resource "aws_lambda_function" "s3_upload" {
 resource "aws_lambda_function" "cat_status" {
   function_name = "cat_status_${random_pet.suffix.id}"
   filename      = "${path.module}/../../../lambdas/cat_status.zip"
-  handler       = "cat_status.lambda_handler"
+  handler       = "handler.lambda_handler"
   runtime       = "python3.11"
   role          = aws_iam_role.cat_status_role.arn
   timeout       = 10

@@ -27,6 +27,11 @@ resource "aws_iam_role_policy" "sfn_policy" {
         Effect : "Allow",
         Action : ["dynamodb:UpdateItem"],
         Resource : aws_dynamodb_table.cat_status.arn # limit to our table
+      },
+      {
+        "Effect": "Allow",
+        "Action": "s3:GetObject",
+        "Resource": "${module.uploads_bucket.s3_bucket_arn}/*"
       }
     ]
   })
@@ -38,8 +43,31 @@ resource "aws_sfn_state_machine" "cat_detection" {
 
   definition = jsonencode({
     Comment : "Detect whether an uploaded image contains a cat and record the result.",
-    StartAt : "DetectLabels",
+    StartAt : "TouchDynamoDB",
     States : {
+      TouchDynamoDB : {
+        Type : "Task",
+        Resource : "arn:aws:states:::aws-sdk:dynamodb:updateItem",
+        Parameters : {
+          TableName : "${aws_dynamodb_table.cat_status.name}",
+
+          Key : {
+            "pic_id" : { "S.$" : "$.detail.object.key" }
+          },
+
+          UpdateExpression : "SET #c = :iscat, #p = :state",
+          ExpressionAttributeNames : {
+            "#c" : "isCat",
+            "#p" : "status"
+          },
+          ExpressionAttributeValues : {
+            ":iscat" : { "Bool" : "False" },
+            ":state" : { "S" : "processing" }
+          }
+        },
+        ResultPath : null,
+        Next : "DetectLabels"
+      }
       DetectLabels : {
         Type : "Task",
         Resource : "arn:aws:states:::aws-sdk:rekognition:detectLabels",
@@ -77,19 +105,18 @@ resource "aws_sfn_state_machine" "cat_detection" {
           TableName : "${aws_dynamodb_table.cat_status.name}",
 
           Key : {
-            objectKey : { "S.$" : "$.decision.key" }
+            "pic_id" : { "S.$" : "$.decision.key" }
           },
 
-          UpdateExpression : "SET #c = :cat, #p = :done",
+          UpdateExpression : "SET #c = :iscat, #p = :state",
           ExpressionAttributeNames : {
             "#c" : "isCat",
             "#p" : "status"
           },
           ExpressionAttributeValues : {
-            ":cat" : { "BOOL.$" : "$.decision.isCat" },
-            ":done" : { "S" : "processed" }
+            ":iscat" : { "Bool.$" : "$.decision.isCat" },
+            ":state" : { "S" : "processed" }
           },
-
           ReturnValues : "NONE"
         },
         End : true

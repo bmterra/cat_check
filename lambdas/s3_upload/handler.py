@@ -37,7 +37,7 @@ def lambda_handler(event, context):
         )
 
     # -------- Generate unique key -----------------------------------------
-    object_key = f"uploads/{uuid.uuid4().hex}{ext}"
+    object_key = f"{uuid.uuid4().hex}{ext}"
 
     # -------- Presigned URL -----------------------------------------------
     try:
@@ -47,10 +47,10 @@ def lambda_handler(event, context):
                 "Bucket": BUCKET,
                 "Key": object_key,
                 # Optional: force the client to tag the correct content-type
-                "ContentType": f"image/{'jpeg' if ext == '.jpg' else 'png'}",
-                "ACL": "public-read",
+                # "ContentType": f"image/{'jpeg' if ext == '.jpg' else 'png'}"
             },
             ExpiresIn=EXPIRY,
+            HttpMethod='PUT'
         )
     except ClientError:
         log.exception("Failed to generate presigned URL")
