@@ -1,0 +1,26 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+
+Description: |
+  Just build artefacts; deployment handled by Terraform.
+
+Globals:
+  Function:
+    Runtime: python3.13
+    Timeout: 10
+    Tracing: Active        # turns on X-Ray—optional
+
+Resources:
+  S3UploadFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      PackageType: Zip
+      CodeUri: lambdas/s3_upload/          # folder, *not* a zip
+      Handler: handler.lambda_handler
+
+  CatStatusFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      PackageType: Zip
+      CodeUri: lambdas/cat_status/
+      Handler: handler.lambda_handler
