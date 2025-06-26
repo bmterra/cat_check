@@ -44,7 +44,7 @@ resource "aws_sfn_state_machine" "cat_detection" {
   definition = jsonencode({
     Comment : "Detect whether an uploaded image contains a cat and record the result.",
     StartAt : "InitState",
-    QueryLanguage: "JSONata",
+    QueryLanguage : "JSONata",
     States : {
       InitState : {
         Type : "Task",
@@ -63,16 +63,14 @@ resource "aws_sfn_state_machine" "cat_detection" {
           ExpressionAttributeValues : {
             ":iscat" : { "Bool" : "False" },
             ":state" : { "S" : "processing" },
-            ":timestamp" : { "S" : "{% $string($millis() + 300) %}" } 
-            
+            ":timestamp" : { "S" : "{% $string($millis() + 300) %}" }
           }
         },
-        Output: "{% $states.input %}"
+        Output : "{% $states.input %}"
         Next : "DetectLabels"
       }
       DetectLabels : {
         Type : "Task",
-        
         Resource : "arn:aws:states:::aws-sdk:rekognition:detectLabels",
         Arguments : {
           Image : {
@@ -84,18 +82,18 @@ resource "aws_sfn_state_machine" "cat_detection" {
           MaxLabels : 10,
           MinConfidence : 80
         },
-        Output: {
+        Output : {
           # "rekognition": "{% $states.result %}",
           # "bucket": "{% $states.input.detail.bucket.name %}",
           "isCat" : "{% 'Cat' in $states.result.Labels[*].Name %}"
-          "key": "{% $states.input.detail.object.key %}",
+          "key" : "{% $states.input.detail.object.key %}",
         },
         Next : "UpdateState"
       },
       UpdateState : {
         Type : "Task",
         Resource : "arn:aws:states:::aws-sdk:dynamodb:updateItem",
-        Arguments: {
+        Arguments : {
           TableName : "${aws_dynamodb_table.cat_status.name}",
           Key : {
             "pic_id" : { "S" : "{% $states.input.key %}" }

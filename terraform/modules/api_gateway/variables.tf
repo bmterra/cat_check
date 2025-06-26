@@ -1,24 +1,24 @@
 variable "suffix" {
   description = "suffix used for naming"
-  type = string
+  type        = string
 }
 
 variable "s3_upload_lambda" {
   description = "s3 upload lambda"
-  type = string
+  type        = string
 }
 
 variable "cat_status_lambda" {
   description = "cat status lambda"
-  type = string
+  type        = string
 }
 
 variable "s3_upload_lambda_arn" {
   description = "s3 upload lambda arn"
-  type = string
+  type        = string
 }
 
 variable "cat_status_lambda_arn" {
-    description = "cat status lambda arn"
-  type = string
+  description = "cat status lambda arn"
+  type        = string
 }
