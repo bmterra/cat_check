@@ -37,7 +37,4 @@ override.tf.json
 terraform.rc
 .terraform.lock.hcl
 
-.aws-sam
-
-python-env
 *.zip
