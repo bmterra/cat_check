@@ -7,8 +7,13 @@ from botocore.exceptions import ClientError
 
 logging.basicConfig(level=logging.INFO)
 log = logging.getLogger(__name__)
+REGION  = os.getenv("AWS_REGION", "eu-west-1") 
+s3 = boto3.client(
+    "s3",
+    region_name = REGION,
+    endpoint_url = f"https://s3.{REGION}.amazonaws.com"
+)
 
-s3       = boto3.client("s3")
 BUCKET   = os.environ["BUCKET_NAME"]
 EXPIRY   = int(os.getenv("URL_EXPIRY_SECONDS", "600"))          # 10 min default
 ALLOWED  = {".jpg", ".png"}                                     # whitelist
@@ -47,7 +52,7 @@ def lambda_handler(event, context):
                 "Bucket": BUCKET,
                 "Key": object_key,
                 # Optional: force the client to tag the correct content-type
-                # "ContentType": f"image/{'jpeg' if ext == '.jpg' else 'png'}"
+                "ContentType": f"image/{'jpeg' if ext == '.jpg' else 'png'}"
             },
             ExpiresIn=EXPIRY,
             HttpMethod='PUT'

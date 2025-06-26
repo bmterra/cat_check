@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Cat Detector 🐱</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <style>
+    body {
+      font-family: sans-serif;
+      background: #f9fafb;
+      text-align: center;
+      padding: 2rem;
+    }
+    input, button {
+      margin: 1rem;
+      padding: 0.6rem 1rem;
+      font-size: 1rem;
+    }
+    #result, #status, #error {
+      margin-top: 1rem;
+      font-weight: bold;
+    }
+    #error {
+      color: red;
+    }
+  </style>
+</head>
+<body>
+  <h1>Cat Detector 📷😸</h1>
+
+  <input type="file" id="fileInput" accept=".jpg,.jpeg,.png" />
+  <br />
+  <button id="uploadBtn" disabled>Upload & Check</button>
+
+  <p id="status"></p>
+  <p id="result"></p>
+  <p id="error"></p>
+
+  <script src="config.js"></script>
+  <script>
+    const fileInput = document.getElementById('fileInput');
+    const uploadBtn = document.getElementById('uploadBtn');
+    const statusEl = document.getElementById('status');
+    const resultEl = document.getElementById('result');
+    const errorEl = document.getElementById('error');
+
+    let selectedFile = null;
+    let pollInterval = null;
+    const apiBase = (window.__CONFIG__?.API_BASE_URL || '').replace(/\/$/, '');
+
+    fileInput.addEventListener('change', () => {
+      const file = fileInput.files[0];
+      const ext = file?.name.split('.').pop().toLowerCase();
+      if (!['jpg', 'jpeg', 'png'].includes(ext)) {
+        errorEl.textContent = 'Only .jpg and .png files are allowed.';
+        fileInput.value = '';
+        selectedFile = null;
+        uploadBtn.disabled = true;
+        return;
+      }
+      errorEl.textContent = '';
+      selectedFile = file;
+      uploadBtn.disabled = false;
+    });
+
+    uploadBtn.addEventListener('click', async () => {
+      if (!selectedFile) return;
+
+      errorEl.textContent = '';
+      statusEl.textContent = 'Uploading...';
+      resultEl.textContent = '';
+
+      try {
+        const metaRes = await fetch(`${apiBase}/s3_upload?filename=${encodeURIComponent(selectedFile.name)}`);
+        if (!metaRes.ok) throw new Error('Failed to get upload URL (400 — file type?)');
+        const { upload_url, object_key } = await metaRes.json();
+
+        const s3Res = await fetch(upload_url, {
+          method: 'PUT',
+          headers: { 'Content-Type': selectedFile.type },
+          body: selectedFile
+        });
+        if (!s3Res.ok) throw new Error('Failed to upload to S3');
+
+        statusEl.textContent = 'Processing...';
+
+        pollInterval = setInterval(async () => {
+          try {
+            const statusRes = await fetch(`${apiBase}/cat_status?pic_id=${encodeURIComponent(object_key)}`);
+            if (!statusRes.ok) throw new Error('Status check failed');
+            const data = await statusRes.json();
+            console.log(data);
+            statusEl.textContent = `Status: ${data.status}`;
+            if (data.status == 'processed') {
+              clearInterval(pollInterval);
+              resultEl.textContent = data.isCat ? "✅ It's a CAT!" : "❌ Not a cat.";
+            }
+          } catch (err) {
+            clearInterval(pollInterval);
+            errorEl.textContent = 'Polling error: ' + err.message;
+          }
+        }, 3000);
+      } catch (err) {
+        errorEl.textContent = err.message;
+      }
+    });
+  </script>
+</body>
+</html>

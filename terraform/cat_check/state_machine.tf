@@ -55,10 +55,10 @@ resource "aws_sfn_state_machine" "cat_detection" {
             "pic_id" : { "S.$" : "$.detail.object.key" }
           },
 
-          UpdateExpression : "SET #c = :iscat, #p = :state",
+          UpdateExpression : "SET #c = :iscat, #s = :state",
           ExpressionAttributeNames : {
             "#c" : "isCat",
-            "#p" : "status"
+            "#s" : "status"
           },
           ExpressionAttributeValues : {
             ":iscat" : { "Bool" : "False" },
@@ -108,10 +108,10 @@ resource "aws_sfn_state_machine" "cat_detection" {
             "pic_id" : { "S.$" : "$.decision.key" }
           },
 
-          UpdateExpression : "SET #c = :iscat, #p = :state",
+          UpdateExpression : "SET #c = :iscat, #s = :state",
           ExpressionAttributeNames : {
             "#c" : "isCat",
-            "#p" : "status"
+            "#s" : "status"
           },
           ExpressionAttributeValues : {
             ":iscat" : { "Bool.$" : "$.decision.isCat" },
