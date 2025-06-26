@@ -29,9 +29,9 @@ resource "aws_iam_role_policy" "sfn_policy" {
         Resource : aws_dynamodb_table.cat_status.arn # limit to our table
       },
       {
-        "Effect": "Allow",
-        "Action": "s3:GetObject",
-        "Resource": "${module.uploads_bucket.s3_bucket_arn}/*"
+        "Effect" : "Allow",
+        "Action" : "s3:GetObject",
+        "Resource" : "${module.uploads_bucket.s3_bucket_arn}/*"
       }
     ]
   })
@@ -64,7 +64,7 @@ resource "aws_sfn_state_machine" "cat_detection" {
           ExpressionAttributeValues : {
             ":iscat" : { "Bool" : "False" },
             ":state" : { "S" : "processing" },
-            ":timestamp" : {"S": "States.Format('{}',States.MathAdd($.detail.metadata.created_at, 300))"} 
+            ":timestamp" : { "S" : "States.Format('{}',States.MathAdd($.detail.metadata.created_at, 300))" }
           }
         },
         ResultPath : null,

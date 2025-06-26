@@ -79,14 +79,14 @@ resource "aws_iam_role_policy_attachment" "cat_status_policy_attach" {
 
 # Lambda functions
 locals {
-  s3_upload_file = "${path.module}/../../lambdas/s3_upload.zip"
+  s3_upload_file  = "${path.module}/../../lambdas/s3_upload.zip"
   cat_status_file = "${path.module}/../../lambdas/cat_status.zip"
 }
 
 data "archive_file" "zip_s3_upload" {
-	source_dir = "${path.module}/../../lambdas/s3_upload"
-	type = "zip"
-	output_path = local.s3_upload_file
+  source_dir  = "${path.module}/../../lambdas/s3_upload"
+  type        = "zip"
+  output_path = local.s3_upload_file
 }
 
 resource "aws_lambda_function" "s3_upload" {
@@ -107,9 +107,9 @@ resource "aws_lambda_function" "s3_upload" {
 }
 
 data "archive_file" "cat_status_upload" {
-	source_dir = "${path.module}/../../lambdas/cat_status"
-	type = "zip"
-	output_path = local.cat_status_file
+  source_dir  = "${path.module}/../../lambdas/cat_status"
+  type        = "zip"
+  output_path = local.cat_status_file
 }
 
 resource "aws_lambda_function" "cat_status" {

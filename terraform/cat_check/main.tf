@@ -31,7 +31,7 @@ module "uploads_bucket" {
     expose_headers  = []
     max_age_seconds = 3000
   }]
-}    
+}
 
 # Enable eventbridge notifications
 resource "aws_s3_bucket_notification" "uploads_bucket_notification" {
@@ -58,28 +58,28 @@ resource "aws_dynamodb_table" "cat_status" {
 
 # API Gateway
 module "api_gateway" {
-  source = "../modules/api_gateway"
-  suffix = random_pet.suffix.id
-  s3_upload_lambda = aws_lambda_function.s3_upload.function_name
-  s3_upload_lambda_arn =  aws_lambda_function.s3_upload.invoke_arn
-  cat_status_lambda = aws_lambda_function.cat_status.function_name
-  cat_status_lambda_arn =  aws_lambda_function.cat_status.invoke_arn
+  source                = "../modules/api_gateway"
+  suffix                = random_pet.suffix.id
+  s3_upload_lambda      = aws_lambda_function.s3_upload.function_name
+  s3_upload_lambda_arn  = aws_lambda_function.s3_upload.invoke_arn
+  cat_status_lambda     = aws_lambda_function.cat_status.function_name
+  cat_status_lambda_arn = aws_lambda_function.cat_status.invoke_arn
 }
 
 # Website
 module "static_site" {
-  source              = "../modules/static_site"
-  bucket_name         = "cat-check-site-${random_pet.suffix.id}"
-  api_base_url        = "/api"
-  content_dir         = "${path.module}/../../static_website"
+  source       = "../modules/static_site"
+  bucket_name  = "cat-check-site-${random_pet.suffix.id}"
+  api_base_url = "/api"
+  content_dir  = "${path.module}/../../static_website"
 }
 
 # CFD
 module "cloudfront_distribution" {
-  source              = "../modules/cloudfront"
-  bucket_arn = module.static_site.bucket_arn
-  bucket_id = module.static_site.bucket_id
+  source                      = "../modules/cloudfront"
+  bucket_arn                  = module.static_site.bucket_arn
+  bucket_id                   = module.static_site.bucket_id
   bucket_regional_domain_name = module.static_site.bucket_regional_domain_name
-  api_endpoint_id = module.api_gateway.id
-  aws_region = data.aws_region.current.region
+  api_endpoint_id             = module.api_gateway.id
+  aws_region                  = data.aws_region.current.region
 }

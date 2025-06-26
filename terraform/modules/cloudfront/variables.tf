@@ -13,7 +13,7 @@ variable "bucket_arn" {
 }
 
 variable "api_endpoint_id" {
-    type = string
+  type = string
 }
 
 variable "aws_region" {

@@ -3,13 +3,13 @@
 resource "aws_apigatewayv2_api" "cats_api" {
   name          = "cats_api_${var.suffix}"
   protocol_type = "HTTP"
-  
+
   # TODO: close this down
   cors_configuration {
-    allow_origins = ["*"]               # site domain
-    allow_methods = ["GET"]             # (OPTIONS is implied)
-    allow_headers = ["content-type"]    # browsers
-    max_age       = 300                 # cache pre-flight response
+    allow_origins = ["*"]            # site domain
+    allow_methods = ["GET"]          # (OPTIONS is implied)
+    allow_headers = ["content-type"] # browsers
+    max_age       = 300              # cache pre-flight response
   }
 }
 

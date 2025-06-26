@@ -32,7 +32,7 @@ resource "aws_cloudfront_distribution" "cdn" {
   origin {
     origin_id   = "cat-api-origin"
     domain_name = "${var.api_endpoint_id}.execute-api.${var.aws_region}.amazonaws.com"
-    origin_path = ""                       # (leave blank for root stage)
+    origin_path = "" # (leave blank for root stage)
     custom_origin_config {
       http_port              = 80
       https_port             = 443
@@ -56,7 +56,7 @@ resource "aws_cloudfront_distribution" "cdn" {
     viewer_protocol_policy = "redirect-to-https"
     allowed_methods        = ["GET", "HEAD", "OPTIONS"]
     cached_methods         = ["GET", "HEAD"]
-    cache_policy_id        = aws_cloudfront_cache_policy.api.id  # no caching + forward queries
+    cache_policy_id        = aws_cloudfront_cache_policy.api.id # no caching + forward queries
   }
 
   restrictions {
@@ -66,7 +66,7 @@ resource "aws_cloudfront_distribution" "cdn" {
   }
 
   viewer_certificate {
-    cloudfront_default_certificate = true           # swap for ACM for custom domain
+    cloudfront_default_certificate = true # swap for ACM for custom domain
   }
 }
 
@@ -104,7 +104,7 @@ data "aws_iam_policy_document" "s3_policy" {
       type        = "AWS"
       identifiers = [aws_cloudfront_origin_access_identity.oai.iam_arn]
     }
-    
+
     #condition {
     #  test     = "StringEquals"
     #  variable = "AWS:SourceAccount"
