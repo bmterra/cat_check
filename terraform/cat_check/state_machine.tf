@@ -43,18 +43,17 @@ resource "aws_sfn_state_machine" "cat_detection" {
 
   definition = jsonencode({
     Comment : "Detect whether an uploaded image contains a cat and record the result.",
-    StartAt : "TouchDynamoDB",
+    StartAt : "InitState",
+    QueryLanguage: "JSONata",
     States : {
-      TouchDynamoDB : {
+      InitState : {
         Type : "Task",
         Resource : "arn:aws:states:::aws-sdk:dynamodb:updateItem",
-        Parameters : {
+        Arguments : {
           TableName : "${aws_dynamodb_table.cat_status.name}",
-
           Key : {
-            "pic_id" : { "S.$" : "$.detail.object.key" }
+            "pic_id" : { "S" : "{% $states.input.detail.object.key %}" }
           },
-
           UpdateExpression : "SET #c = :iscat, #s = :state, #t = :timestamp",
           ExpressionAttributeNames : {
             "#c" : "isCat",
@@ -64,62 +63,53 @@ resource "aws_sfn_state_machine" "cat_detection" {
           ExpressionAttributeValues : {
             ":iscat" : { "Bool" : "False" },
             ":state" : { "S" : "processing" },
-            ":timestamp" : { "S" : "States.Format('{}',States.MathAdd($.detail.metadata.created_at, 300))" }
+            ":timestamp" : { "S" : "{% $string($millis() + 300) %}" } 
+            
           }
         },
-        ResultPath : null,
+        Output: "{% $states.input %}"
         Next : "DetectLabels"
       }
       DetectLabels : {
         Type : "Task",
+        
         Resource : "arn:aws:states:::aws-sdk:rekognition:detectLabels",
-        Parameters : {
+        Arguments : {
           Image : {
             S3Object : {
-              "Bucket.$" : "$.detail.bucket.name",
-              "Name.$" : "$.detail.object.key"
+              "Bucket" : "{% $states.input.detail.bucket.name %}",
+              "Name" : "{% $states.input.detail.object.key %}"
             }
           },
           MaxLabels : 10,
           MinConfidence : 80
         },
-        ResultPath : "$.rekognition",
-        Next : "DetermineIsCat"
-      },
-
-      # Use an intrinsic to calculate a Boolean
-      DetermineIsCat : {
-        Type : "Pass",
-        Parameters : {
-          "bucket.$" : "$.detail.bucket.name",
-          "key.$" : "$.detail.object.key",
-          # true if *any* label name == "Cat"
-          "isCat.$" : "States.ArrayContains($.rekognition.Labels[*].Name, 'Cat')"
+        Output: {
+          # "rekognition": "{% $states.result %}",
+          # "bucket": "{% $states.input.detail.bucket.name %}",
+          "isCat" : "{% 'Cat' in $states.result.Labels[*].Name %}"
+          "key": "{% $states.input.detail.object.key %}",
         },
-        ResultPath : "$.decision",
-        Next : "UpdateDynamoDB"
+        Next : "UpdateState"
       },
-
-      UpdateDynamoDB : {
+      UpdateState : {
         Type : "Task",
         Resource : "arn:aws:states:::aws-sdk:dynamodb:updateItem",
-        Parameters : {
+        Arguments: {
           TableName : "${aws_dynamodb_table.cat_status.name}",
           Key : {
-            "pic_id" : { "S.$" : "$.decision.key" }
+            "pic_id" : { "S" : "{% $states.input.key %}" }
           },
-
           UpdateExpression : "SET #c = :iscat, #s = :state",
           ExpressionAttributeNames : {
             "#c" : "isCat",
             "#s" : "status"
           },
           ExpressionAttributeValues : {
-            ":iscat" : { "Bool.$" : "$.decision.isCat" },
+            ":iscat" : { "Bool" : "{% $states.input.isCat %}" },
             ":state" : { "S" : "processed" }
           },
-          ReturnValues : "NONE"
-        },
+        }
         End : true
       }
     }
