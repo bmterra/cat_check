@@ -1,7 +1,9 @@
 output "endpoint" {
-  value = aws_apigatewayv2_api.cats_api.api_endpoint
+  description = "API Gateway Endpoint"
+  value = aws_apigatewayv2_api.cats_check.api_endpoint
 }
 
 output "id" {
-  value = aws_apigatewayv2_api.cats_api.id
+  description = "API Gateway Id"
+  value = aws_apigatewayv2_api.cats_check.id
 }
