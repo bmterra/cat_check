@@ -30,7 +30,7 @@ contains the image of a cat.
 
 ## Next Steps
 
-* Multiple environments
+* Multiple environments & IaC refactoring
 * CI/CD for code bases
 * CI & Remote state and lock for Terraform (Terraform Cloud, self-hosting, etc.)
 * Resource tagging
@@ -43,9 +43,16 @@ contains the image of a cat.
     * Managed User Access
     * Errors handling
 
+## Requirements
+
+* AWS Account (https://aws.amazon.com/console/) and
+* IAM user credentials for the AWS CLI (https://docs.aws.amazon.com/cli/v1/userguide/cli-authentication-user.html)
+* Terraform client (https://developer.hashicorp.com/terraform/install)
+* Pictures of your cat.
+
 ## Deployment
 
-This PoC is deployed using IaC:
+This PoC/MVP is deployed using IaC:
 
 ```bash
 cd terraform/cat_check/
